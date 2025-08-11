@@ -1,0 +1,99 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+
+@Injectable()
+export class UsersService {
+  constructor(private prisma: PrismaService) {}
+
+  async create(userData: any) {
+    return this.prisma.user.create({
+      data: userData,
+    });
+  }
+
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return users;
+  }
+
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return updatedUser;
+  }
+
+  async remove(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'User deleted successfully' };
+  }
+}
