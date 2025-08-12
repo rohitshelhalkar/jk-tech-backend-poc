@@ -1,15 +1,23 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import * as fs from 'fs';
 import * as path from 'path';
+import {UserRole, DocumentStatus} from 'src/utils/StringConst';
+import {IngestionService} from 'src/ingestion/ingestion.service';
 
 @Injectable()
 export class DocumentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private ingestionService: IngestionService
+  ) {}
+
+  setIngestionService(ingestionService: any) {
+    this.ingestionService = ingestionService;
+  }
 
   async create(file: Express.Multer.File, createDocumentDto: CreateDocumentDto, userId: string) {
     if (!file) {
@@ -25,6 +33,7 @@ export class DocumentsService {
         filePath: file.path,
         title: createDocumentDto.title || file.originalname,
         description: createDocumentDto.description,
+        status: DocumentStatus.UPLOADED,
         uploadedBy: userId,
       },
       include: {
@@ -37,6 +46,17 @@ export class DocumentsService {
         },
       },
     });
+
+    // Automatically trigger ingestion for the uploaded document
+    try {
+      if (this.ingestionService) {
+        await this.ingestionService.triggerAutomaticIngestion(document.id, userId);
+        console.log(`Automatic ingestion triggered for document ${document.id}`);
+      }
+    } catch (error) {
+      console.error(`Failed to trigger automatic ingestion for document ${document.id}:`, error);
+      // Don't throw error here - document upload should succeed even if ingestion fails to start
+    }
 
     return document;
   }
@@ -154,5 +174,36 @@ export class DocumentsService {
     });
 
     return { message: 'Document deleted successfully' };
+  }
+
+  // Method to update document status - used by ingestion service
+  async updateDocumentStatus(documentId: string, status: string) {
+    return this.prisma.document.update({
+      where: { id: documentId },
+      data: { 
+        status,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  // Method to get documents by status
+  async findDocumentsByStatus(status: string) {
+    return this.prisma.document.findMany({
+      where: { 
+        status,
+        isDeleted: false,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 }

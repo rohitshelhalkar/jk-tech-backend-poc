@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional, IsPositive, Min, IsEnum } from 'class-validator';
-import { IngestionStatus } from '@prisma/client';
+import {IngestionStatus} from 'src/utils/StringConst';
 
 export class IngestionJobsQueryDto {
   @ApiPropertyOptional({ example: 1, minimum: 1 })
@@ -18,8 +18,7 @@ export class IngestionJobsQueryDto {
   @Min(1)
   limit?: number = 10;
 
-  @ApiPropertyOptional({ enum: IngestionStatus, example: IngestionStatus.COMPLETED })
+  @ApiPropertyOptional({ example: IngestionStatus.COMPLETED })
   @IsOptional()
-  @IsEnum(IngestionStatus)
-  status?: IngestionStatus;
+  status?: string;
 }

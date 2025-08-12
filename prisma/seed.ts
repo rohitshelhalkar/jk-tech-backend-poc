@@ -1,5 +1,6 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -8,14 +9,16 @@ async function main() {
   // Create admin user
   const hashedPassword = await bcrypt.hash('Admin@1234$', 10);
   
+  // Create admin user
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: {},
     create: {
+      id: uuidv4(),
       email: 'admin@example.com',
       name: 'Admin User',
       password: hashedPassword,
-      role: UserRole.ADMIN,
+      role: 'ADMIN',
       active: true,
     },
   });
@@ -26,10 +29,11 @@ async function main() {
     where: { email: 'editor@example.com' },
     update: {},
     create: {
+      id: uuidv4(),
       email: 'editor@example.com',
       name: 'Editor User',
       password: editorPassword,
-      role: UserRole.EDITOR,
+      role: 'EDITOR',
       active: true,
     },
   });
@@ -40,10 +44,11 @@ async function main() {
     where: { email: 'viewer@example.com' },
     update: {},
     create: {
+      id: uuidv4(),
       email: 'viewer@example.com',
       name: 'Viewer User',
       password: viewerPassword,
-      role: UserRole.VIEWER,
+      role: 'VIEWER',
       active: true,
     },
   });

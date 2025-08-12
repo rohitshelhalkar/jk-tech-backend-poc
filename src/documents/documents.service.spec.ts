@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
 import { DocumentsService } from './documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as fs from 'fs';
+import {UserRole} from 'src/utils/StringConst';
 
 jest.mock('fs');
 
@@ -12,12 +12,12 @@ describe('DocumentsService', () => {
   let prisma: jest.Mocked<PrismaService>;
 
   const mockUser = {
-    id: 'user123',
+    id: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7',
     role: UserRole.EDITOR,
   };
 
   const mockDocument = {
-    id: 'doc123',
+    id: 'f3895b13-1b74-45ce-8573-85095702b267',
     filename: 'test.pdf',
     originalName: 'test-document.pdf',
     mimetype: 'application/pdf',
@@ -25,11 +25,11 @@ describe('DocumentsService', () => {
     filePath: '/uploads/test.pdf',
     title: 'Test Document',
     description: 'Test description',
-    uploadedBy: 'user123',
+    uploadedBy: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7',
     createdAt: new Date(),
     updatedAt: new Date(),
     user: {
-      id: 'user123',
+      id: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7',
       name: 'Test User',
       email: 'test@example.com',
     },
@@ -70,9 +70,9 @@ describe('DocumentsService', () => {
   describe('create', () => {
     it('should create a document', async () => {
       const createDto = { title: 'Test Document', description: 'Test description' };
-      prisma.document.create.mockResolvedValue(mockDocument);
+      (prisma.document.create as jest.Mock).mockResolvedValue(mockDocument);
 
-      const result = await service.create(mockFile, createDto, 'user123');
+      const result = await service.create(mockFile, createDto, '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7');
 
       expect(result).toEqual(mockDocument);
       expect(prisma.document.create).toHaveBeenCalledWith({
@@ -84,7 +84,7 @@ describe('DocumentsService', () => {
           filePath: mockFile.path,
           title: createDto.title,
           description: createDto.description,
-          uploadedBy: 'user123',
+          uploadedBy: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7',
         },
         include: {
           user: {
@@ -101,39 +101,39 @@ describe('DocumentsService', () => {
     it('should throw BadRequestException if no file provided', async () => {
       const createDto = { title: 'Test Document' };
 
-      await expect(service.create(null, createDto, 'user123'))
+      await expect(service.create(null, createDto, '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7'))
         .rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findOne', () => {
     it('should return document for admin/editor', async () => {
-      prisma.document.findUnique.mockResolvedValue(mockDocument);
+      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
 
-      const result = await service.findOne('doc123', mockUser);
+      const result = await service.findOne('f3895b13-1b74-45ce-8573-85095702b267', mockUser);
 
       expect(result).toEqual(mockDocument);
     });
 
     it('should return document for owner viewer', async () => {
-      const viewerUser = { id: 'user123', role: UserRole.VIEWER };
-      prisma.document.findUnique.mockResolvedValue(mockDocument);
+      const viewerUser = { id: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7', role: UserRole.VIEWER };
+      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
 
-      const result = await service.findOne('doc123', viewerUser);
+      const result = await service.findOne('f3895b13-1b74-45ce-8573-85095702b267', viewerUser);
 
       expect(result).toEqual(mockDocument);
     });
 
     it('should throw ForbiddenException for non-owner viewer', async () => {
       const viewerUser = { id: 'other-user', role: UserRole.VIEWER };
-      prisma.document.findUnique.mockResolvedValue(mockDocument);
+      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
 
-      await expect(service.findOne('doc123', viewerUser))
+      await expect(service.findOne('f3895b13-1b74-45ce-8573-85095702b267', viewerUser))
         .rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException if document not found', async () => {
-      prisma.document.findUnique.mockResolvedValue(null);
+      (prisma.document.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(service.findOne('nonexistent', mockUser))
         .rejects.toThrow(NotFoundException);
@@ -142,16 +142,16 @@ describe('DocumentsService', () => {
 
   describe('remove', () => {
     it('should delete document and file', async () => {
-      prisma.document.findUnique.mockResolvedValue(mockDocument);
-      prisma.document.delete.mockResolvedValue(mockDocument);
+      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
+      (prisma.document.delete as jest.Mock).mockResolvedValue(mockDocument);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (fs.unlinkSync as jest.Mock).mockImplementation(() => {});
 
-      const result = await service.remove('doc123', mockUser);
+      const result = await service.remove('f3895b13-1b74-45ce-8573-85095702b267', mockUser);
 
       expect(result).toEqual({ message: 'Document deleted successfully' });
       expect(fs.unlinkSync).toHaveBeenCalledWith(mockDocument.filePath);
-      expect(prisma.document.delete).toHaveBeenCalledWith({ where: { id: 'doc123' } });
+      expect(prisma.document.delete).toHaveBeenCalledWith({ where: { id: 'f3895b13-1b74-45ce-8573-85095702b267' } });
     });
   });
 });

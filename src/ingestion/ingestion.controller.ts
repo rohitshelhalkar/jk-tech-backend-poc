@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Param, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
 import { IngestionService } from './ingestion.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -8,6 +7,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { TriggerIngestionDto } from './dto/trigger-ingestion.dto';
 import { IngestionJobResponseDto } from './dto/ingestion-job-response.dto';
 import { IngestionJobsQueryDto } from './dto/ingestion-jobs-query.dto';
+import {UserRole} from 'src/utils/StringConst';
 
 @ApiTags('Ingestion')
 @ApiBearerAuth()

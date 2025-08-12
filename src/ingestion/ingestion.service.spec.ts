@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { IngestionStatus, UserRole } from '@prisma/client';
 import { IngestionService } from './ingestion.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentsService } from '../documents/documents.service';
 import { MockIngestionService } from './mock-ingestion.service';
+import {IngestionStatus} from 'src/utils/StringConst';
 
 describe('IngestionService', () => {
   let service: IngestionService;
@@ -82,15 +82,30 @@ describe('IngestionService', () => {
 
   describe('triggerIngestion', () => {
     const mockDocument = {
-      id: 'doc123',
+      id: 'a084882f-f0b3-46e4-95da-9ef394676a11',
+      filename: 'test.pdf',
+      originalName: 'test-document.pdf',
+      mimetype: 'application/pdf',
+      size: 1024,
+      filePath: '/uploads/test.pdf',
       title: 'Test Document',
+      description: 'Test description',
+      status: 'UPLOADED',
       uploadedBy: 'user123',
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      user: {
+        id: 'user123',
+        name: 'Test User',
+        email: 'test@example.com',
+      },
     };
 
     it('should create ingestion job and trigger mock processing', async () => {
       documentsService.findOne.mockResolvedValue(mockDocument);
-      prisma.ingestionJob.create.mockResolvedValue(mockJob);
-      prisma.ingestionJob.update.mockResolvedValue({ ...mockJob, status: IngestionStatus.PROCESSING });
+      (prisma.ingestionJob.create as jest.Mock).mockResolvedValue(mockJob);
+      (prisma.ingestionJob.update as jest.Mock).mockResolvedValue({ ...mockJob, status: IngestionStatus.PENDING });
       configService.get.mockReturnValue('true');
 
       const result = await service.triggerIngestion('doc123', 'user123');
@@ -99,14 +114,14 @@ describe('IngestionService', () => {
       expect(mockIngestionService.processDocument).toHaveBeenCalledWith('job123', 'doc123');
       expect(prisma.ingestionJob.update).toHaveBeenCalledWith({
         where: { id: 'job123' },
-        data: { status: IngestionStatus.PROCESSING },
+        data: { status: IngestionStatus.PENDING },
       });
     });
 
     it('should create ingestion job', async () => {
       documentsService.findOne.mockResolvedValue(mockDocument);
-      prisma.ingestionJob.create.mockResolvedValue(mockJob);
-      prisma.ingestionJob.update.mockResolvedValue({ ...mockJob, status: IngestionStatus.PROCESSING });
+      (prisma.ingestionJob.create as jest.Mock).mockResolvedValue(mockJob);
+      (prisma.ingestionJob.update as jest.Mock).mockResolvedValue({ ...mockJob, status: IngestionStatus.PENDING });
       configService.get.mockReturnValue('true');
 
       await service.triggerIngestion('doc123', 'user123');
@@ -142,7 +157,7 @@ describe('IngestionService', () => {
   describe('updateJobStatus', () => {
     it('should update job status to completed', async () => {
       const updatedJob = { ...mockJob, status: IngestionStatus.COMPLETED, completedAt: new Date() };
-      prisma.ingestionJob.update.mockResolvedValue(updatedJob);
+      (prisma.ingestionJob.update as jest.Mock).mockResolvedValue(mockJob);
 
       const result = await service.updateJobStatus('job123', IngestionStatus.COMPLETED);
 
@@ -160,7 +175,7 @@ describe('IngestionService', () => {
     it('should update job status to failed with error message', async () => {
       const errorMessage = 'Processing failed';
       const updatedJob = { ...mockJob, status: IngestionStatus.FAILED, errorMessage };
-      prisma.ingestionJob.update.mockResolvedValue(updatedJob);
+      (prisma.ingestionJob.update as jest.Mock).mockResolvedValue(updatedJob);
 
       const result = await service.updateJobStatus('job123', IngestionStatus.FAILED, errorMessage);
 

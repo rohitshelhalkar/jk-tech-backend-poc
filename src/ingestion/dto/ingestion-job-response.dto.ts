@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IngestionStatus } from '@prisma/client';
+import {IngestionStatus} from 'src/utils/StringConst';
 
 export class IngestionJobResponseDto {
   @ApiProperty({ example: 'cuid123' })
@@ -11,8 +11,8 @@ export class IngestionJobResponseDto {
   @ApiProperty({ example: 'cuid789' })
   userId: string;
 
-  @ApiProperty({ enum: IngestionStatus, example: IngestionStatus.PROCESSING })
-  status: IngestionStatus;
+  @ApiProperty({ example: IngestionStatus.PENDING })
+  status: string;
 
   @ApiProperty({ example: null, nullable: true })
   errorMessage?: string;

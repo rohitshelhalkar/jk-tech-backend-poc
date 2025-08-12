@@ -1,12 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import {UserRole} from 'src/utils/StringConst';
 
 export class UpdateUserDto {
-  @ApiPropertyOptional({ enum: UserRole, example: UserRole.EDITOR })
+  @ApiPropertyOptional({ example: UserRole.EDITOR })
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole;
+  role?: string;
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()

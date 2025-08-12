@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import {UserRole} from 'src/utils/StringConst';
+import { v4 as uuidv4 } from 'uuid';
 
 jest.mock('bcrypt');
 
@@ -14,12 +15,13 @@ describe('AuthService', () => {
   let jwtService: jest.Mocked<JwtService>;
 
   const mockUser = {
-    id: 'user123',
+    id: uuidv4(),
     email: 'test@example.com',
     name: 'Test User',
     password: 'hashedPassword',
     role: UserRole.VIEWER,
     active: true,
+    isDeleted: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

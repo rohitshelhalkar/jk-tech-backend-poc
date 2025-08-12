@@ -10,67 +10,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  ADMIN
-  EDITOR
-  VIEWER
-}
-
-enum IngestionStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
   name      String
   password  String
-  role      UserRole @default(VIEWER)
+  role      String   @default("VIEWER")
   active    Boolean  @default(true)
+  isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
-  documents    Document[]
+  // // Relations
+  documents     Document[]
   ingestionJobs IngestionJob[]
 
   @@map("users")
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  filename    String
+  id           String   @id @default(uuid()) @db.Uuid
+  filename     String
   originalName String
-  mimetype    String
-  size        Int
-  filePath    String
-  title       String?
-  description String?
-  uploadedBy  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  mimetype     String
+  size         Int
+  filePath     String
+  title        String?
+  description  String?
+  status       String   @default("UPLOADED")
+  uploadedBy   String   @db.Uuid
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
 
-  user         User           @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  // Relations
+  user          User           @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
   ingestionJobs IngestionJob[]
 
+  // Indexes
+  @@index([uploadedBy])
+  @@index([status])
   @@map("documents")
 }
 
 model IngestionJob {
-  id           String          @id @default(cuid())
-  documentId   String
-  userId       String
-  status       IngestionStatus @default(PENDING)
+  id           String    @id @default(uuid()) @db.Uuid
+  documentId   String    @db.Uuid
+  userId       String    @db.Uuid
+  status       String    @default("PENDING")
   errorMessage String?
   startedAt    DateTime?
   completedAt  DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now())
 
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relations
+  document Document @relation(fields: [documentId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
+  // Indexes
+  @@index([documentId])
+  @@index([userId])
+  @@index([status])
   @@map("ingestion_jobs")
 }
