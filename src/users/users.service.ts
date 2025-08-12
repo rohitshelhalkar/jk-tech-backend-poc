@@ -14,6 +14,9 @@ export class UsersService {
 
   async findAll() {
     const users = await this.prisma.user.findMany({
+      where: {
+        isDeleted: false,
+      },
       select: {
         id: true,
         email: true,
@@ -28,8 +31,11 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+    const user = await this.prisma.user.findFirst({
+      where: { 
+        id,
+        isDeleted: false
+      },
       select: {
         id: true,
         email: true,
@@ -49,14 +55,20 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
+    return this.prisma.user.findFirst({
+      where: { 
+        email,
+        isDeleted: false
+      },
     });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+    const user = await this.prisma.user.findFirst({
+      where: { 
+        id,
+        isDeleted: false
+      },
     });
 
     if (!user) {
@@ -65,7 +77,10 @@ export class UsersService {
 
     const updatedUser = await this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: {
+        ...updateUserDto,
+        updatedAt: new Date()
+      },
       select: {
         id: true,
         email: true,
@@ -81,16 +96,24 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+    const user = await this.prisma.user.findFirst({
+      where: { 
+        id,
+        isDeleted: false
+      },
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    await this.prisma.user.delete({
+    // Soft delete the user
+    await this.prisma.user.update({
       where: { id },
+      data: { 
+        isDeleted: true,
+        updatedAt: new Date()
+      }
     });
 
     return { message: 'User deleted successfully' };

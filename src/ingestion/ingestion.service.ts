@@ -118,8 +118,11 @@ export class IngestionService implements OnModuleInit {
   }
 
   async getIngestionJob(jobId: string, user: any) {
-    const job = await this.prisma.ingestionJob.findUnique({
-      where: { id: jobId },
+    const job = await this.prisma.ingestionJob.findFirst({
+      where: { 
+        id: jobId,
+        isDeleted: false
+      },
       include: {
         document: {
           select: {
@@ -157,8 +160,8 @@ export class IngestionService implements OnModuleInit {
 
     // Viewers can only see their own jobs, admins and editors can see all
     const whereClause: any = user.role === UserRole.VIEWER 
-      ? { userId: user.id }
-      : {};
+      ? { userId: user.id, isDeleted: false }
+      : { isDeleted: false };
 
     if (status) {
       whereClause.status = status;

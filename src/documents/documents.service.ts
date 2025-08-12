@@ -67,8 +67,8 @@ export class DocumentsService {
 
     // Viewers can only see their own documents, admins and editors can see all
     const whereClause = user.role === UserRole.VIEWER 
-      ? { uploadedBy: user.id }
-      : {};
+      ? { uploadedBy: user.id, isDeleted: false }
+      : { isDeleted: false };
 
     const [documents, total] = await Promise.all([
       this.prisma.document.findMany({
@@ -101,8 +101,11 @@ export class DocumentsService {
   }
 
   async findOne(id: string, user: any) {
-    const document = await this.prisma.document.findUnique({
-      where: { id },
+    const document = await this.prisma.document.findFirst({
+      where: { 
+        id,
+        isDeleted: false
+      },
       include: {
         user: {
           select: {
@@ -164,13 +167,17 @@ export class DocumentsService {
   async remove(id: string, user: any) {
     const document = await this.findOne(id, user);
 
-    // Delete file from disk
-    if (fs.existsSync(document.filePath)) {
-      fs.unlinkSync(document.filePath);
-    }
+    // Note: We don't delete the file from disk for soft deletes
+    // The file remains on disk in case we need to restore the document
+    // In a real implementation, you might want to move files to a "trash" folder
 
-    await this.prisma.document.delete({
+    // Soft delete the document
+    await this.prisma.document.update({
       where: { id },
+      data: { 
+        isDeleted: true,
+        updatedAt: new Date()
+      }
     });
 
     return { message: 'Document deleted successfully' };

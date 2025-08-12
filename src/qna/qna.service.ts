@@ -42,6 +42,7 @@ export class QnaService {
         where,
         include: {
           messages: {
+            where: { isDeleted: false }, // Only include non-deleted messages
             orderBy: { createdAt: 'desc' },
             take: 1 // Only get the latest message for preview
           }
@@ -152,11 +153,20 @@ export class QnaService {
     await Promise.all([
       this.prisma.conversation.update({
         where: { id: conversationId },
-        data: { isDeleted: true }
+        data: { 
+          isDeleted: true,
+          updatedAt: new Date()
+        }
       }),
       this.prisma.message.updateMany({
-        where: { conversationId },
-        data: { isDeleted: true }
+        where: { 
+          conversationId,
+          isDeleted: false // Only update non-deleted messages
+        },
+        data: { 
+          isDeleted: true,
+          updatedAt: new Date()
+        }
       })
     ]);
 
