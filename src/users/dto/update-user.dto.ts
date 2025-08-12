@@ -3,6 +3,10 @@ import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import {UserRole} from 'src/utils/StringConst';
 
 export class UpdateUserDto {
+
+  @ApiPropertyOptional({ example: 'John Doe' })
+  name: string;
+  
   @ApiPropertyOptional({ example: UserRole.EDITOR })
   @IsOptional()
   role?: string;

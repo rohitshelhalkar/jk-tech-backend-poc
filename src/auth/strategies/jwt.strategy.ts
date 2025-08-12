@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {UsersService} from 'src/users/users.service';
 
@@ -26,10 +26,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // }
 
   async validate(payload: any) {
-  
-  const user = await this.userService.findById(payload.sub);
-  return {
-    ...user
-  };
-}
+    const user = await this.userService.findById(payload.sub);
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+    if (!user.active) {
+      throw new UnauthorizedException('Your account has been deactivated. Please contact the administrator.');
+    }
+    
+    return {
+      ...user
+    };
+  }
 }

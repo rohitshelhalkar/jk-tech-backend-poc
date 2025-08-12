@@ -268,10 +268,6 @@ sequenceDiagram
     I->>DB: Update job status
 ```
 
-## Miro Board Content
-
-### 📋 **Miro Board Template Structure**
-
 **Board Title:** User Document Management API - System Architecture & Workflow
 
 #### **Section 1: System Overview**
@@ -383,20 +379,6 @@ Infrastructure Security
          │  Shared Volume  │
          │   ./uploads     │
          └─────────────────┘
-```
-
-### **🔗 Miro Board Link Placeholder**
-```
-📌 **Miro Board:** [View Interactive Architecture Board]
-   Link: https://miro.com/app/board/[YOUR-BOARD-ID]
-   
-   Contains:
-   - Interactive system diagrams
-   - User journey workflows  
-   - API endpoint mappings
-   - Database relationships
-   - Security architecture
-   - Deployment strategies
 ```
 
 ### **📊 Key Metrics Dashboard**
@@ -778,10 +760,6 @@ npx prisma db seed
    - Implement health checks
    - Monitor file storage usage
    - Track ingestion job metrics
-
-## License
-
-MIT License - see LICENSE file for details.
 
 ## Support
 

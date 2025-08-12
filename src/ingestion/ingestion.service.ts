@@ -232,6 +232,10 @@ export class IngestionService implements OnModuleInit {
       // Update document status based on ingestion result
       if (status === IngestionStatus.COMPLETED) {
         await this.documentsService.updateDocumentStatus(documentId, DocumentStatus.PROCESSED);
+        
+        // Create document chunks for Q&A functionality
+        await this.createDocumentChunks(documentId);
+        
         console.log(`Document ${documentId} successfully processed`);
       } else if (status === IngestionStatus.FAILED) {
         await this.documentsService.updateDocumentStatus(documentId, DocumentStatus.FAILED);
@@ -266,5 +270,105 @@ export class IngestionService implements OnModuleInit {
         await this.handleIngestionComplete(documentId, jobId, status, errorMessage);
       }
     );
+  }
+
+  // Create document chunks for Q&A functionality
+  private async createDocumentChunks(documentId: string) {
+    try {
+      console.log(`Creating document chunks for document ${documentId}`);
+
+      // Get document information
+      const document = await this.prisma.document.findUnique({
+        where: { id: documentId }
+      });
+
+      if (!document) {
+        console.error(`Document ${documentId} not found for chunking`);
+        return;
+      }
+
+      // Mock document content extraction and chunking
+      // In a real implementation, this would:
+      // 1. Read the actual file from storage
+      // 2. Extract text using appropriate libraries (PDF.js, docx, etc.)
+      // 3. Split text into meaningful chunks
+      // 4. Generate embeddings for each chunk using OpenAI, Sentence Transformers, etc.
+
+      const mockContent = this.generateMockDocumentContent(document);
+      const chunks = this.splitTextIntoChunks(mockContent, 500); // 500 characters per chunk
+
+      // Save chunks to database
+      const chunkPromises = chunks.map((chunk, index) => 
+        this.prisma.documentChunk.create({
+          data: {
+            documentId,
+            content: chunk,
+            chunkIndex: index,
+            embedding: null, // Would contain vector embedding in real implementation
+            metadata: {
+              documentTitle: document.title,
+              documentFilename: document.filename,
+              chunkLength: chunk.length,
+              createdBy: 'ingestion-service'
+            }
+          }
+        })
+      );
+
+      await Promise.all(chunkPromises);
+      console.log(`Successfully created ${chunks.length} chunks for document ${documentId}`);
+
+    } catch (error) {
+      console.error(`Error creating chunks for document ${documentId}:`, error);
+    }
+  }
+
+  // Generate mock document content for demonstration
+  private generateMockDocumentContent(document: any): string {
+    const templates = [
+      `This document titled "${document.title || document.originalName}" contains comprehensive information about various topics. The document discusses key concepts, methodologies, and findings that are relevant to the subject matter. It provides detailed analysis and insights that can be useful for understanding the core principles.`,
+      
+      `Introduction: This ${document.mimetype.includes('pdf') ? 'PDF' : 'document'} provides an overview of important topics and concepts. The content is organized into several sections that cover different aspects of the subject matter.`,
+      
+      `Main Content: The document explores various themes and presents detailed information about the topic. It includes analysis, examples, and explanations that help readers understand the key points being discussed.`,
+      
+      `Analysis Section: This part of the document contains analytical content that examines different perspectives and approaches to the subject matter. The analysis is supported by examples and case studies.`,
+      
+      `Conclusion: The document concludes with a summary of the main findings and recommendations. It provides actionable insights and suggestions for further exploration of the topic.`,
+      
+      `Technical Details: This section contains technical information and specifications related to the subject matter. It includes detailed explanations of processes, methodologies, and best practices.`
+    ];
+
+    return templates.join('\n\n');
+  }
+
+  // Split text into chunks of specified size
+  private splitTextIntoChunks(text: string, maxChunkSize: number): string[] {
+    const chunks: string[] = [];
+    const sentences = text.split('. ');
+    let currentChunk = '';
+
+    for (const sentence of sentences) {
+      const potentialChunk = currentChunk ? `${currentChunk}. ${sentence}` : sentence;
+      
+      if (potentialChunk.length <= maxChunkSize) {
+        currentChunk = potentialChunk;
+      } else {
+        if (currentChunk) {
+          chunks.push(currentChunk);
+          currentChunk = sentence;
+        } else {
+          // Handle case where single sentence is longer than maxChunkSize
+          chunks.push(sentence.substring(0, maxChunkSize));
+          currentChunk = sentence.substring(maxChunkSize);
+        }
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks.filter(chunk => chunk.trim().length > 0);
   }
 }

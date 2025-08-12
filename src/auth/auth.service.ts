@@ -16,7 +16,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (user && await bcrypt.compare(password, user.password)) {
       if (!user.active) {
-        throw new UnauthorizedException('Account is inactive');
+        throw new UnauthorizedException('Your account has been deactivated. Please contact the administrator.');
       }
       const { password: _, ...result } = user;
       return result;
@@ -47,7 +47,8 @@ export class AuthService {
     const userData = {
       ...registerDto,
       password: hashedPassword,
-      role: registerDto.role || UserRole.VIEWER,
+      role: UserRole.VIEWER,
+      active: true, // New users are active by default
     };
 
     const user = await this.usersService.create(userData);

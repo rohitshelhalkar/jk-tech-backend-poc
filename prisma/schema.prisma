@@ -24,6 +24,8 @@ model User {
   // // Relations
   documents     Document[]
   ingestionJobs IngestionJob[]
+  conversations Conversation[]
+  messages      Message[]
 
   @@map("users")
 }
@@ -44,8 +46,9 @@ model Document {
   updatedAt    DateTime @default(now())
 
   // Relations
-  user          User           @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
   ingestionJobs IngestionJob[]
+  chunks        DocumentChunk[]
 
   // Indexes
   @@index([uploadedBy])
@@ -74,4 +77,64 @@ model IngestionJob {
   @@index([userId])
   @@index([status])
   @@map("ingestion_jobs")
+}
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String?
+  userId    String   @db.Uuid
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  // Indexes
+  @@index([userId])
+  @@index([createdAt])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @db.Uuid
+  userId         String   @db.Uuid
+  content        String   @db.Text
+  role           String   // 'user' or 'assistant'
+  metadata       Json?    // For storing additional data like sources, tokens, etc.
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([conversationId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @db.Uuid
+  content    String   @db.Text
+  embedding  String?  // JSON string of vector embedding for RAG
+  chunkIndex Int      // Position of chunk in the document
+  metadata   Json?    // Additional metadata like page number, section, etc.
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  // Relations
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([documentId])
+  @@index([chunkIndex])
+  @@map("document_chunks")
 }
