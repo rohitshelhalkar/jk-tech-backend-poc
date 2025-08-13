@@ -4,7 +4,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../utils/StringConst';
 import { v4 as uuidv4 } from 'uuid';
 
 jest.mock('bcrypt');
@@ -66,6 +66,7 @@ describe('AuthService', () => {
         active: mockUser.active,
         createdAt: mockUser.createdAt,
         updatedAt: mockUser.updatedAt,
+        isDeleted: mockUser.isDeleted,
       });
     });
 
@@ -126,6 +127,7 @@ describe('AuthService', () => {
       expect(usersService.create).toHaveBeenCalledWith({
         ...registerDto,
         password: 'hashedPassword',
+        active: true,
       });
     });
 

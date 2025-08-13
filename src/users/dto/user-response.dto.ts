@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../../utils/StringConst';
 
 export class UserResponseDto {
   @ApiProperty({ example: 'cuid123' })

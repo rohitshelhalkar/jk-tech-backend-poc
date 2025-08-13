@@ -7,7 +7,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { TriggerIngestionDto } from './dto/trigger-ingestion.dto';
 import { IngestionJobResponseDto } from './dto/ingestion-job-response.dto';
 import { IngestionJobsQueryDto } from './dto/ingestion-jobs-query.dto';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../utils/StringConst';
 
 @ApiTags('Ingestion')
 @ApiBearerAuth()

@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { IngestionService } from '../ingestion/ingestion.service';
 import * as fs from 'fs';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../utils/StringConst';
 
 jest.mock('fs');
 
@@ -54,10 +55,18 @@ describe('DocumentsService', () => {
               create: jest.fn(),
               findMany: jest.fn(),
               findUnique: jest.fn(),
+              findFirst: jest.fn(),
               update: jest.fn(),
               delete: jest.fn(),
               count: jest.fn(),
             },
+          },
+        },
+        {
+          provide: IngestionService,
+          useValue: {
+            triggerIngestion: jest.fn(),
+            triggerAutomaticIngestion: jest.fn(),
           },
         },
       ],
@@ -85,6 +94,7 @@ describe('DocumentsService', () => {
           title: createDto.title,
           description: createDto.description,
           uploadedBy: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7',
+          status: 'UPLOADED',
         },
         include: {
           user: {
@@ -108,7 +118,7 @@ describe('DocumentsService', () => {
 
   describe('findOne', () => {
     it('should return document for admin/editor', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
+      (prisma.document.findFirst as jest.Mock).mockResolvedValue(mockDocument);
 
       const result = await service.findOne('f3895b13-1b74-45ce-8573-85095702b267', mockUser);
 
@@ -117,7 +127,7 @@ describe('DocumentsService', () => {
 
     it('should return document for owner viewer', async () => {
       const viewerUser = { id: '9baa37ea-65f3-4bb5-a15d-515b1ba4e9c7', role: UserRole.VIEWER };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
+      (prisma.document.findFirst as jest.Mock).mockResolvedValue(mockDocument);
 
       const result = await service.findOne('f3895b13-1b74-45ce-8573-85095702b267', viewerUser);
 
@@ -126,14 +136,14 @@ describe('DocumentsService', () => {
 
     it('should throw ForbiddenException for non-owner viewer', async () => {
       const viewerUser = { id: 'other-user', role: UserRole.VIEWER };
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
+      (prisma.document.findFirst as jest.Mock).mockResolvedValue(mockDocument);
 
       await expect(service.findOne('f3895b13-1b74-45ce-8573-85095702b267', viewerUser))
         .rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException if document not found', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.document.findFirst as jest.Mock).mockResolvedValue(null);
 
       await expect(service.findOne('nonexistent', mockUser))
         .rejects.toThrow(NotFoundException);
@@ -141,17 +151,20 @@ describe('DocumentsService', () => {
   });
 
   describe('remove', () => {
-    it('should delete document and file', async () => {
-      (prisma.document.findUnique as jest.Mock).mockResolvedValue(mockDocument);
-      (prisma.document.delete as jest.Mock).mockResolvedValue(mockDocument);
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.unlinkSync as jest.Mock).mockImplementation(() => {});
+    it('should soft delete document', async () => {
+      (prisma.document.findFirst as jest.Mock).mockResolvedValue(mockDocument);
+      (prisma.document.update as jest.Mock).mockResolvedValue(mockDocument);
 
       const result = await service.remove('f3895b13-1b74-45ce-8573-85095702b267', mockUser);
 
       expect(result).toEqual({ message: 'Document deleted successfully' });
-      expect(fs.unlinkSync).toHaveBeenCalledWith(mockDocument.filePath);
-      expect(prisma.document.delete).toHaveBeenCalledWith({ where: { id: 'f3895b13-1b74-45ce-8573-85095702b267' } });
+      expect(prisma.document.update).toHaveBeenCalledWith({ 
+        where: { id: 'f3895b13-1b74-45ce-8573-85095702b267' },
+        data: { 
+          isDeleted: true,
+          updatedAt: expect.any(Date)
+        }
+      });
     });
   });
 });

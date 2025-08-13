@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {PrismaService} from '../prisma/prisma.service';
-import {IngestionStatus} from 'src/utils/StringConst';
+import {IngestionStatus} from '../utils/StringConst';
 
 @Injectable()
 export class MockIngestionService {

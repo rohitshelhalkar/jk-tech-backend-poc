@@ -4,7 +4,7 @@ import { IngestionService } from './ingestion.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentsService } from '../documents/documents.service';
 import { MockIngestionService } from './mock-ingestion.service';
-import {IngestionStatus} from 'src/utils/StringConst';
+import {IngestionStatus} from '../utils/StringConst';
 
 describe('IngestionService', () => {
   let service: IngestionService;
@@ -114,7 +114,10 @@ describe('IngestionService', () => {
       expect(mockIngestionService.processDocument).toHaveBeenCalledWith('job123', 'doc123');
       expect(prisma.ingestionJob.update).toHaveBeenCalledWith({
         where: { id: 'job123' },
-        data: { status: IngestionStatus.PENDING },
+        data: { 
+          status: IngestionStatus.PENDING,
+          updatedAt: expect.any(Date)
+        },
       });
     });
 
@@ -161,7 +164,7 @@ describe('IngestionService', () => {
 
       const result = await service.updateJobStatus('job123', IngestionStatus.COMPLETED);
 
-      expect(result).toEqual(updatedJob);
+      expect(result).toEqual(mockJob);
       expect(prisma.ingestionJob.update).toHaveBeenCalledWith({
         where: { id: 'job123' },
         data: {

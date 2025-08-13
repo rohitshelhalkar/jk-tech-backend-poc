@@ -6,7 +6,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../utils/StringConst';
 
 @ApiTags('Users')
 @ApiBearerAuth()

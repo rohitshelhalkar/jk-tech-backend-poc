@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {IngestionStatus} from 'src/utils/StringConst';
+import {IngestionStatus} from '../../utils/StringConst';
 
 export class IngestionJobResponseDto {
   @ApiProperty({ example: 'cuid123' })

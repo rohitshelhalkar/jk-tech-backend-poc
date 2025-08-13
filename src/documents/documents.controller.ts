@@ -25,7 +25,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../utils/StringConst';
 
 @ApiTags('Documents')
 @ApiBearerAuth()

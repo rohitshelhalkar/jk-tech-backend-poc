@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
-import {UserRole} from 'src/utils/StringConst';
+import {UserRole} from '../../utils/StringConst';
 
 export class UpdateUserDto {
 

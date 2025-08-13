@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { DocumentsService } from '../documents/documents.service';
 import { MockIngestionService } from './mock-ingestion.service';
 import { IngestionJobsQueryDto } from './dto/ingestion-jobs-query.dto';
-import {UserRole, IngestionStatus, DocumentStatus} from 'src/utils/StringConst';
+import {UserRole, IngestionStatus, DocumentStatus} from '../utils/StringConst';
 
 @Injectable()
 export class IngestionService implements OnModuleInit {

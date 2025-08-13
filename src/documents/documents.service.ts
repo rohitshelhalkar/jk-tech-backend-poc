@@ -5,8 +5,8 @@ import { UpdateDocumentDto } from './dto/update-document.dto';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import * as fs from 'fs';
 import * as path from 'path';
-import {UserRole, DocumentStatus} from 'src/utils/StringConst';
-import {IngestionService} from 'src/ingestion/ingestion.service';
+import {UserRole, DocumentStatus} from '../utils/StringConst';
+import {IngestionService} from '../ingestion/ingestion.service';
 
 @Injectable()
 export class DocumentsService {
