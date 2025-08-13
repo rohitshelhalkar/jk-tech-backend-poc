@@ -15,6 +15,7 @@ lerna-debug.log*
 .DS_Store
 
 # Tests
+/coverage
 /.nyc_output
 
 # IDEs and editors
@@ -51,6 +52,7 @@ pids
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
+coverage
 *.lcov
 
 # nyc test coverage
